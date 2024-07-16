@@ -1,3 +1,5 @@
+
+
 import 'package:flutter/material.dart';
 // import 'package:flutter/widgets.dart';
 
@@ -33,10 +35,36 @@ class _MyHomePageState extends State<MyHomePage> {
   final _forKey = GlobalKey<FormState>();
   final TextEditingController _height = TextEditingController();
   final TextEditingController _weight = TextEditingController();
+  String _result = '';
+  String resultFinal = '';
+  String _status = '';
+  
 
-  void _submit(){
+
+   void _submit(){
     if(_forKey.currentState!.validate()){
       debugPrint('Success');
+      debugPrint('Height:${_height.text}');
+      debugPrint('Weight:${_weight.text}');
+      debugPrint('Result:$_result');
+      final heightValue = double.parse(_height.text);
+      final weightValue = double.parse(_weight.text);
+      
+      
+      setState(() {
+        _result = ((weightValue / heightValue / heightValue)* 10000).toStringAsFixed(2);
+        num resultFinal = double.parse(_result);
+        if(resultFinal < 18.5){
+          _status = 'Underweight';
+        } else if(resultFinal >= 18.5 && resultFinal < 25){
+          _status = 'Normal';
+        } else if(resultFinal >= 25 && resultFinal < 30){
+          _status = 'Overweight';
+        } else if(resultFinal >= 30){
+          _status = 'Obese';
+        }
+
+      });
     }else{
       debugPrint('Failed');
     }
@@ -53,7 +81,9 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(""),
+            const Text("Calculate your BMI"),
+             Text(_result),
+             Text(_status),
             Padding(
               padding: const EdgeInsets.all(50),
               child: Form(
@@ -64,7 +94,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       controller: _height,
                       decoration:  const InputDecoration(
                         label:  Text("Height"),
-                        // labelText: "Height",
+                        
                       ),
                       keyboardType: TextInputType.number,
                       validator: (value){
