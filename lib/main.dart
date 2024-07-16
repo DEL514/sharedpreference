@@ -1,7 +1,5 @@
-
-
 import 'package:flutter/material.dart';
-// import 'package:flutter/widgets.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const MyApp());
@@ -36,36 +34,64 @@ class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _height = TextEditingController();
   final TextEditingController _weight = TextEditingController();
   String _result = '';
-  String resultFinal = '';
   String _status = '';
-  
 
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+    _removeData();
+  }
 
-   void _submit(){
-    if(_forKey.currentState!.validate()){
+  Future<void> _loadData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _result = prefs.getString('result') ?? '';
+      _status = prefs.getString('status') ?? '';
+    });
+  }
+
+  Future<void> _saveData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('result', _result);
+    await prefs.setString('status', _status);
+  }
+
+  Future<void> _removeData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('result');
+    await prefs.remove('status');
+    setState(() {
+      _result = '0.00';
+      _status = 'No Data';
+    });
+  }
+
+  void _submit() {
+    if (_forKey.currentState!.validate()) {
       debugPrint('Success');
       debugPrint('Height:${_height.text}');
       debugPrint('Weight:${_weight.text}');
       debugPrint('Result:$_result');
       final heightValue = double.parse(_height.text);
       final weightValue = double.parse(_weight.text);
-      
-      
+
       setState(() {
-        _result = ((weightValue / heightValue / heightValue)* 10000).toStringAsFixed(2);
+        _result = ((weightValue / heightValue / heightValue) * 10000).toStringAsFixed(2);
         num resultFinal = double.parse(_result);
-        if(resultFinal < 18.5){
+        if (resultFinal < 18.5) {
           _status = 'Underweight';
-        } else if(resultFinal >= 18.5 && resultFinal < 25){
+        } else if (resultFinal >= 18.5 && resultFinal < 25) {
           _status = 'Normal';
-        } else if(resultFinal >= 25 && resultFinal < 30){
+        } else if (resultFinal >= 25 && resultFinal < 30) {
           _status = 'Overweight';
-        } else if(resultFinal >= 30){
+        } else if (resultFinal >= 30) {
           _status = 'Obese';
         }
-
       });
-    }else{
+
+      _saveData();  
+    } else {
       debugPrint('Failed');
     }
   }
@@ -77,13 +103,13 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
         backgroundColor: Colors.blue[100],
       ),
-      body:  Center(
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text("Calculate your BMI"),
-             Text(_result),
-             Text(_status),
+            Text(_result),
+            Text(_status),
             Padding(
               padding: const EdgeInsets.all(50),
               child: Form(
@@ -92,35 +118,34 @@ class _MyHomePageState extends State<MyHomePage> {
                   children: [
                     TextFormField(
                       controller: _height,
-                      decoration:  const InputDecoration(
-                        label:  Text("Height"),
-                        
+                      decoration: const InputDecoration(
+                        label: Text("Height"),
                       ),
                       keyboardType: TextInputType.number,
-                      validator: (value){
-                        if (value == null || value.isEmpty){
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
                           return 'Please enter your Height in centimeter';
-                        }else if (!RegExp(r'^\d*\.?\d+$').hasMatch(value)){
+                        } else if (!RegExp(r'^\d*\.?\d+$').hasMatch(value)) {
                           return 'Please enter a valid number';
-                        }else{
+                        } else {
                           return null;
                         }
                       },
                     ),
-                      const SizedBox(
-                        height: 30,
+                    const SizedBox(
+                      height: 30,
                     ),
                     TextFormField(
                       controller: _weight,
                       decoration: const InputDecoration(
                         label: Text("Weight"),
                       ),
-                      validator: (value){
-                        if (value == null || value.isEmpty){
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
                           return 'Please enter your Weight in centimeter';
-                        }else if (!RegExp(r'^\d*\.?\d+$').hasMatch(value)){
+                        } else if (!RegExp(r'^\d*\.?\d+$').hasMatch(value)) {
                           return 'Please enter a valid number';
-                        }else{
+                        } else {
                           return null;
                         }
                       },
@@ -128,10 +153,13 @@ class _MyHomePageState extends State<MyHomePage> {
                     const SizedBox(
                       height: 40,
                     ),
-                    ElevatedButton(onPressed: (){
-                      _submit();
-                    }, 
-                    child: const Text("Calculate BMI")
+                    ElevatedButton(
+                      onPressed: _submit,
+                      child: const Text("Calculate BMI"),
+                    ),
+                    ElevatedButton(
+                      onPressed: _removeData,
+                      child: const Text("Remove Data"),
                     ),
                   ],
                 ),
